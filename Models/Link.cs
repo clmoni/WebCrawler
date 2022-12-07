@@ -2,45 +2,99 @@
 
 public class Link
 {
-    private const string _insecureHttpProtocol = "http:";
-    private const string _secureHttpProtocol = "https:";
-    private const char _forwardSlash = '/';
+    private const char ForwardSlash = '/';
+    private static readonly string[] NonVisitableLinkTypes = { "#", "mailto:", "tel:", "sms:" };
+    private static readonly string[] VisitableLinkTypes = { "http:", "https:" };
 
-
-    public string OriginalLink { get; }
-    public string ParentLink { get; }
-    public bool IsOriginalLinkFullQualified { get; }
-    public Uri? FullyQualifiedUri { get; }
-    public bool IsLinkToBeVisited { get; }
+    public string RawChildLink { get; }
+    public Uri? Uri { get; }
+    public Uri ParentLink { get; }
 
     // Domain is in parent link
-    public Link(string originalLink, string parentLink)
+    public Link(string childLink, string parentLink)
     {
-        OriginalLink = originalLink;
-        ParentLink = NormaliseLink(parentLink);
-        IsOriginalLinkFullQualified = IsLinkFullQualified(originalLink);
-        FullyQualifiedUri = IsOriginalLinkFullQualified ? new Uri(OriginalLink) : default;
-        IsLinkToBeVisited = IsOriginalLinkFullQualified;
+        RawChildLink = childLink;
+        Uri = NormaliseChildLink(childLink, parentLink);
+        ParentLink = new Uri(parentLink);
     }
 
-    private bool IsLinkFullQualified(string originalLink)
+    private bool IsChildLinkSameAsParent()
     {
-        return originalLink.ToLower().StartsWith(_insecureHttpProtocol) || originalLink.ToLower().StartsWith(_secureHttpProtocol);
+        return IsChildLinkSameAs(ParentLink);
+    }
+    
+    public bool IsCrawlableLink(Uri topLevelUri)
+    {
+        return Uri is not null &&
+               !IsChildLinkSameAsParent() &&
+               !IsChildLinkSameAs(topLevelUri) &&
+               IsChildLinkInParentDomain();
     }
 
-    public string NormaliseLink(string link)
+    private bool IsChildLinkSameAs(Uri uri)
     {
-        var uri = new Uri(link);
+        return Uri is not null && Uri.ToString().ToUpper().TrimEnd(ForwardSlash).Equals(uri.ToString().ToUpper().TrimEnd(ForwardSlash));
+    }
 
-        var builder = new UriBuilder();
-        builder.Scheme = uri.Scheme;
-        builder.Port = uri.Port;
-        builder.Host = uri.Host;
-        builder.Path = uri.AbsolutePath;
+    private static bool StartsWithHttpProtocol(string childLink)
+    {
+        return VisitableLinkTypes.Any(childLink.ToLower().StartsWith);
+    }
 
-        return builder.Uri.AbsoluteUri
-            .Remove(builder.Uri.AbsoluteUri.Length - builder.Uri.Segments.Last().Length)
-            .TrimEnd(_forwardSlash);
+    private static bool IsValidUri(string link)
+    {
+        try
+        {
+            if (!StartsWithHttpProtocol(link))
+            {
+                throw new Exception("Invalid link");
+            }
+            var _ = new Uri(link);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private bool IsChildLinkInParentDomain()
+    {
+        return ParentLink.Host == Uri?.Host;
+    }
+    
+    private static Uri? NormaliseChildLink(string childLink, string parentLink)
+    {
+        if (NonVisitableLinkTypes.Any(childLink.ToLower().StartsWith) ||
+            childLink.Trim().TrimEnd(ForwardSlash)
+                .Equals(parentLink.Trim().TrimEnd(ForwardSlash)) ||
+            childLink.Trim().Equals(ForwardSlash.ToString()))
+        {
+            return default;
+        }
+
+        if (IsValidUri(childLink))
+        {
+            return new Uri(childLink);
+        }
+        
+        var parentUri = new Uri(parentLink);
+        var sections = new List<string>();
+        
+        sections.AddRange(childLink.Split(ForwardSlash));
+
+        var nonEmptySections = sections.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+        var relativeUrl = string.Join(ForwardSlash, nonEmptySections);
+
+        var builder = new UriBuilder
+        {
+            Scheme = parentUri.Scheme,
+            Port = parentUri.Port,
+            Host = parentUri.Host
+        };
+
+        return new Uri(builder.Uri, relativeUrl);
     }
 }
 

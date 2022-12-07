@@ -1,29 +1,50 @@
-﻿using System;
-using Models;
+﻿using Models;
 
 namespace Crawler.Service.Tests
 {
 	public class LinkTests
 	{
 		[Theory]
-		[InlineData("http://test.com/about", "http://test.com", "http://test.com")]
-        [InlineData("https://test.com/about", "https://test.com", "https://test.com")]
-        [InlineData("test/about", "http://test.com", "http://test.com")]
-        [InlineData("https://test.com/contact", "https://test.com?test=test", "https://test.com")]
-        [InlineData("https://test.com/contact", "https://test.com/test.html", "https://test.com")]
-        public void Constructor_GivenFullyQualifiedOriginalLinkAndParentLink_ShouldIniitaliseWithFullyQualifiedUriAndBeVisitable(string expectedOriginalLink, string parentLink, string expectedParentLink)
+		[InlineData("http://test.com/about", "http://test.com/about", "http://test.com", "http://test.com")]
+        [InlineData("https://test.com/about", "https://test.com/about", "https://test.com", "https://test.com")]
+        [InlineData("/about", "http://test.com/about", "http://test.com", "http://test.com")]
+        [InlineData("about", "http://test.com/about", "http://test.com", "http://test.com")]
+        [InlineData("/about", "http://test.com/about", "http://test.com/contact", "http://test.com/contact")]
+        [InlineData("about", "http://test.com/about", "http://test.com/contact", "http://test.com/contact")]
+        [InlineData("https://test.com/contact", "https://test.com/contact", "https://test.com?test=test", "https://test.com?test=test")]
+        [InlineData("https://test.com/contact", "https://test.com/contact", "https://test.com/test.html", "https://test.com/test.html")]
+        [InlineData("robots.txt", "https://test.com/robots.txt", "https://test.com", "https://test.com")]
+        public void Constructor_GivenFullyQualifiedOriginalLinkAndParentLink_ShouldIniitaliseWithFullyQualifiedUriAndBeVisitable(string expectedOriginalLink, string expectedChildLink,string parentLink, string expectedParentLink)
 		{
 			// act
 			var actual = new Link(expectedOriginalLink, parentLink);
 
 			// assert
 			actual.Should().Match<Link>(l =>
-			l.OriginalLink.Equals(expectedOriginalLink) &&
-			l.ParentLink.Equals(expectedParentLink) &&
-			l.IsOriginalLinkFullQualified == true &&
-			l.IsLinkToBeVisited == true &&
-			l.FullyQualifiedUri == new Uri(expectedOriginalLink));
+				l.RawChildLink.Equals(expectedOriginalLink) &&
+				l.Uri != null &&
+				l.Uri.Equals(new Uri(expectedChildLink)) &&
+				l.ParentLink.Equals(new Uri(expectedParentLink)) &&
+				l.IsCrawlableLink(new Uri(parentLink)) == true);
 		}
+        
+        [Theory]
+        [InlineData("http://test.com/about", "http://test.com/about")]
+        [InlineData("https://test.com", "https://test.com/")]
+        [InlineData("https://test.com/", "https://test.com")]
+        [InlineData("https://test.com/", "https://test.com/")]
+        [InlineData("/", "https://test.com/")]
+        public void Constructor_GivenChildLinkSameAsParent_ShouldNotBeVisitable(string expectedOriginalLink,string parentLink)
+        {
+	        // act
+	        var actual = new Link(expectedOriginalLink, parentLink);
+
+	        // assert
+	        actual.Should().Match<Link>(l =>
+		        l.RawChildLink.Equals(expectedOriginalLink) &&
+		        l.Uri == null &&
+		        l.IsCrawlableLink(new Uri(parentLink)) == false);
+        }
 
         [Theory]
         [InlineData("mailto:name@email.com")]
@@ -33,18 +54,17 @@ namespace Crawler.Service.Tests
         public void Constructor_GivenNonFullyQualifiedOriginalLinkAndParentLink_ShouldIniitaliseWithNullUriAndNotBeVisitable(string expectedOriginalLink)
         {
             // arrange
-            var expectedParentLink = "http://test.com";
+            const string expectedParentLink = "http://test.com";
 
             // act
             var actual = new Link(expectedOriginalLink, expectedParentLink);
 
             // assert
             actual.Should().Match<Link>(l =>
-            l.OriginalLink.Equals(expectedOriginalLink) &&
-            l.ParentLink.Equals(expectedParentLink) &&
-            l.IsOriginalLinkFullQualified == false &&
-            l.IsLinkToBeVisited == false &&
-            l.FullyQualifiedUri == default);
+	            l.RawChildLink == expectedOriginalLink &&
+	            l.Uri == null &&
+	            l.ParentLink.Equals(new Uri(expectedParentLink)) &&
+	            l.IsCrawlableLink(new Uri(expectedParentLink)) == false);
         }
     }
 }

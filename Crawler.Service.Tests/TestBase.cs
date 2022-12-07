@@ -1,8 +1,5 @@
-﻿using System;
-using Moq;
-using Moq.Protected;
+﻿using Moq.Protected;
 using System.Net;
-using System.Reflection.Metadata;
 using System.Net.Http.Headers;
 
 namespace Crawler.Service.Tests
@@ -14,11 +11,24 @@ namespace Crawler.Service.Tests
         protected static string TestWebPageWithLinks =>
             @"<!DOCTYPE html>
             <html>
-            <body><a href='https://www.link1.com'>This is a link</a>
-            <a href='https://www.link2.com'>This is a link</a>
-            <a href='https://www.link3.com'>This is a link   \\n</a>
-            <a href='https://www.link2.com'>This is a link</body>
-            </html>";
+            <body><a href='https://www.link.com/one'>This is a link</a>
+            <a href='https://www.link.com/two'>This is a link</a>
+            <a href='https://www.link.com/three'>This is a link   \\n</a>
+            <a href='https://www.link.com/four'>This is a link   \\n</a>
+            <a href='/four'>This is a link</body>
+            </html>";       
+        
+        protected static string TestRobotsTxt =>
+            @"# robotstxt.org/
+
+            User-agent: *
+            Disallow: /docs/
+            Disallow: /referral/
+            Disallow: /-staging-referral/
+            Disallow: /install/
+            Disallow: /blog/authors/
+            Disallow: /pay/
+            Disallow: /-deeplinks/";
 
         protected static string TestWebPageWithNoLinks =>
             @"<!DOCTYPE html>

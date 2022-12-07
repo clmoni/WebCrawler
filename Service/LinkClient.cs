@@ -1,33 +1,34 @@
 ﻿using Microsoft.Extensions.Logging;
-using Models;
 using Service.Abstractions;
 
 namespace Service;
-public class CrawlerClient : ICrawlerClient
+public class LinkClient : ILinkClient
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<CrawlerClient> _logger;
+    private readonly ILogger<LinkClient> _logger;
     private const string HtmlContentMediaType = "text/html";
 
-    public CrawlerClient(HttpClient httpClient, ILoggerFactory loggerFactory)
+    public LinkClient(HttpClient httpClient, ILoggerFactory loggerFactory)
     {
         _httpClient = httpClient;
-        _logger = loggerFactory.CreateLogger<CrawlerClient>();
+        _logger = loggerFactory.CreateLogger<LinkClient>();
 
     }
-
-
-    // add polly for retrying here
-    public async Task<string> GetPageContentAsync(Uri uri)
+    
+    // add polly for retrying here.
+    // for now I've made this method return 
+    // an empty string when failure occurs.
+    // to be handled by caller.
+    public async Task<string> GetLinkContentAsync(Uri uri)
     {
         try
         {
             var response = await _httpClient.GetAsync(uri);
             response.EnsureSuccessStatusCode();
             using var content = response.Content;
-            var contenType = content.Headers.ContentType;
+            var contentType = content.Headers.ContentType;
 
-            if (!HtmlContentMediaType.Equals(contenType?.MediaType))
+            if (!HtmlContentMediaType.Equals(contentType?.MediaType))
             {
                 return string.Empty;
             }

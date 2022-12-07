@@ -1,9 +1,14 @@
-﻿namespace Crawler;
-class Program
+﻿using Microsoft.Extensions.DependencyInjection;
+using Service.Abstractions;
+
+namespace Crawler;
+
+public static class Program
 {
-    static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        var host = StartUp.CreateHostBuilder(args).Build();
+        await host.Services.GetRequiredService<ICrawlerEngine>().Crawl();
     }
 }
 
