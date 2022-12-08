@@ -64,7 +64,7 @@ public class LinkRepository: ILinkRepository
                 WriteIndented = true
             });
             
-            _logger.LogInformation("Results: {Results} \n\n Visited: {count} page(s)", results, _linkRepository.Count);
+            _logger.LogInformation(@"Results: {Results} \n\n Visited: {Count} page(s)", results, _linkRepository.Count);
         }
     }
 }
