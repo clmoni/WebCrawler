@@ -12,7 +12,6 @@ public class LinkClient : ILinkClient
     {
         _httpClient = httpClient;
         _logger = loggerFactory.CreateLogger<LinkClient>();
-
     }
     
     // add polly for retrying here.

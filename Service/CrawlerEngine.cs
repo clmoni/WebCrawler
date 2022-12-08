@@ -11,31 +11,28 @@ public class CrawlerEngine: EngineBase, ICrawlerEngine
         IQueueManager queueManager,
         ILinkService linkService,
         ILinkRepository linkRepository,
-        ILogger<CrawlerEngine> logger,
+        ILoggerFactory loggerFactory,
         Uri topLevelUri) :
         base(queueManager, linkService, linkRepository, topLevelUri)
     {
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger<CrawlerEngine>();;
     }
 
     public async Task Crawl()
     {
-        _logger.LogInformation("Crawling has started");
-
         // dispose queue upon completion of crawling
         using (QueueManager)
         {
+            _logger.LogInformation("Crawling has started");
             var topLevelLinks = await LinkService.FindChildLinksAsync(TopLevelUri);
             EnqueueTopLevelLinks(topLevelLinks);
+            
+            var tasks = topLevelLinks.Select(_ => Task.Run(CrawlChildren)).ToList();
 
-            foreach (var _ in topLevelLinks)
-            {
-                await Task.Factory.StartNew(async () => { await CrawlChildren(TopLevelUri); });
-
-                Thread.Sleep(1000);
-            }
+            await Task.WhenAll(tasks);
+            _logger.LogInformation("Crawling is complete");
         }
-
-        _logger.LogInformation("Crawling is complete");
+        
+        LinkRepository.PrintAll();
     }
 }

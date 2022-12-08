@@ -6,7 +6,7 @@ namespace Service;
 public abstract class EngineBase
 {
     protected readonly IQueueManager QueueManager;
-    private readonly ILinkRepository _linkRepository;
+    protected readonly ILinkRepository LinkRepository;
     protected readonly ILinkService LinkService;
     protected readonly Uri TopLevelUri;
 
@@ -14,7 +14,7 @@ public abstract class EngineBase
     {
         QueueManager = queueManager;
         LinkService = linkService;
-        _linkRepository = linkRepository;
+        LinkRepository = linkRepository;
         TopLevelUri = topLevelUri;
     }
     
@@ -23,16 +23,16 @@ public abstract class EngineBase
         foreach (var link in topLevelLinks)
         {
             if (!link.IsCrawlableLink(TopLevelUri)) continue;
-            _linkRepository.AddVisited(TopLevelUri);
+            LinkRepository.AddVisited(TopLevelUri);
             Enqueue(link);
         }
     }
     
-    protected async Task CrawlChildren(Uri topLevelUri)
+    protected async Task CrawlChildren()
     {
         while (QueueManager.Dequeue(out var link))
         {
-            await HandleLink(topLevelUri, link);
+            await HandleLink(TopLevelUri, link);
         }
     }
 
@@ -40,8 +40,8 @@ public abstract class EngineBase
     {
         if (link.Uri == null) return;
         
-        _linkRepository.AddChildOfVisited(link.ParentLink, link.Uri);
-        if (!_linkRepository.IsAlreadyVisited(link.Uri))
+        LinkRepository.AddChildOfVisited(link.ParentLink, link.Uri);
+        if (!LinkRepository.IsAlreadyVisited(link.Uri))
         {
             QueueManager.Enqueue(link);
         }
@@ -50,7 +50,7 @@ public abstract class EngineBase
     private async Task HandleLink(Uri topLevelUri, Link link)
     {
         if (link.Uri is null) return;
-        _linkRepository.AddVisited(link.Uri);
+        LinkRepository.AddVisited(link.Uri);
         var childLinks = await LinkService.FindChildLinksAsync(link.Uri);
 
         foreach (var childLink in childLinks)

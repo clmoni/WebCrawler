@@ -20,15 +20,18 @@ public static class StartUp
             {
                 services.AddSingleton<IQueueManager, QueueManager>(_ =>
                         new QueueManager(new BlockingCollection<Link>(new ConcurrentQueue<Link>())))
-                    .AddSingleton<ILinkRepository, LinkRepository>(_ =>
-                        new LinkRepository(new Dictionary<string, List<string?>>()))
+                    .AddSingleton<ILinkRepository, LinkRepository>(p =>
+                        new LinkRepository(
+                            new Dictionary<string, List<string?>>(),
+                            p.GetRequiredService<ILoggerFactory>()
+                        ))
                     .AddScoped<ILinkService, LinkService>()
                     .AddScoped<ICrawlerEngine, CrawlerEngine>(p =>
                         new CrawlerEngine(
                             p.GetRequiredService<IQueueManager>(),
                             p.GetRequiredService<ILinkService>(),
                             p.GetRequiredService<ILinkRepository>(),
-                            p.GetRequiredService<ILogger<CrawlerEngine>>(),
+                            p.GetRequiredService<ILoggerFactory>(),
                             startingUri
                         ))
                     .AddHttpClient<ILinkClient, LinkClient>();
