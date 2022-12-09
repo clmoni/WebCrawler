@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Service;
-using Service.Abstractions;
+using Services;
+using Services.Abstractions;
 
 namespace Crawler.Service.Tests.UnitTests;
 

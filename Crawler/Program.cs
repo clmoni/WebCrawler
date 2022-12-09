@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Service.Abstractions;
+using Services.Abstractions;
 
 namespace Crawler;
 

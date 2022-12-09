@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using Microsoft.Extensions.Logging;
-using Service;
+using Services;
 
 namespace Crawler.Service.Tests.UnitTests;
 public class LinkClientTests : TestBase

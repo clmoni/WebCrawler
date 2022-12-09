@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Models;
-using Service.Abstractions;
+using Services.Abstractions;
 
 namespace Crawler.Service.Tests
 {

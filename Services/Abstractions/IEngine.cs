@@ -1,4 +1,4 @@
-﻿namespace Service.Abstractions
+﻿namespace Services.Abstractions
 {
 	public interface IEngine
 	{

@@ -1,6 +1,6 @@
 ﻿using Models;
 
-namespace Service.Abstractions
+namespace Services.Abstractions
 {
     public interface ILinkService
     {

@@ -1,8 +1,8 @@
 ﻿using HtmlAgilityPack;
 using Models;
-using Service.Abstractions;
+using Services.Abstractions;
 
-namespace Service
+namespace Services
 {
 	public class LinkService: ILinkService
 	{

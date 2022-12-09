@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Models;
-using Service.Abstractions;
+using Services.Abstractions;
 
-namespace Service;
+namespace Services;
 
 /*
  * not all methods here are tests as most of them are just wrapping

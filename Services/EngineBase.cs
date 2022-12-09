@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Models;
-using Service.Abstractions;
+using Services.Abstractions;
 
-namespace Service;
+namespace Services;
 
 public abstract class EngineBase: IEngine
 {

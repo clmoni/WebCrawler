@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Models;
-using Service;
-using Service.Abstractions;
+using Services;
+using Services.Abstractions;
 
 namespace Crawler;
 

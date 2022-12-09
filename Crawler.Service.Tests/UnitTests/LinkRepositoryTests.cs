@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Service;
+using Services;
 
 namespace Crawler.Service.Tests.UnitTests;
 

@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using Models;
-using Service.Abstractions;
+using Services.Abstractions;
 
-namespace Service;
+namespace Services;
 
 /*
  * using out of the box thread safe BlockingCollection due to its

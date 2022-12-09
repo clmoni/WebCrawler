@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Service.Abstractions;
+using Services.Abstractions;
 
-namespace Service;
+namespace Services;
 
 public class CrawlerEngine: EngineBase
 {
