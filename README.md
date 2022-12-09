@@ -7,7 +7,7 @@
 3. Language: C#
 
 ### Run on terminal 
-From root directory run: `dotnet run --project Crawler/Crawler.csproj -- "http://monzo.com"`
+From root directory run: `cd Crawler && dotnet run -- "http://monzo.com"`
 
 ### Test on terminal
 From root directory run: `dotnet test -v q --nologo -l:"console;verbosity=detailed"`
