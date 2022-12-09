@@ -1,15 +1,13 @@
 ﻿using Service;
 using Service.Abstractions;
 
-namespace Crawler.Service.Tests
+namespace Crawler.Service.Tests.UnitTests
 {
 	public class LinkServiceTests: TestBase
 	{
-		private readonly Mock<ILinkClient> _mockLinkClient;
-
 		public LinkServiceTests()
 		{
-			_mockLinkClient = new Mock<ILinkClient>();
+			MockLinkClient = new Mock<ILinkClient>();
         }
 
 		[Fact]
@@ -17,18 +15,18 @@ namespace Crawler.Service.Tests
 		{
 			// arrange
 			var expectedUri = new Uri("https://www.link.com");
-			_mockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(TestWebPageWithLinks);
-			var linkService = new LinkService(_mockLinkClient.Object);
+			MockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(TestWebPageWithLinks);
+			var linkService = new LinkService(MockLinkClient.Object);
 
 			// act
 			var actual = await linkService.FindChildLinksAsync(expectedUri);
 
 			// assert
-			actual.Count.Should().Be(4);
-			actual[0].Uri.Should().Be("https://www.link.com/one");
-            actual[1].Uri.Should().Be("https://www.link.com/two");
-            actual[2].Uri.Should().Be("https://www.link.com/three");
-            actual[3].Uri.Should().Be("https://www.link.com/four");
+			actual.VisitableLinks.Count.Should().Be(4);
+			actual.VisitableLinks[0].Uri.Should().Be("https://www.link.com/one");
+            actual.VisitableLinks[1].Uri.Should().Be("https://www.link.com/two");
+            actual.VisitableLinks[2].Uri.Should().Be("https://www.link.com/three");
+            actual.VisitableLinks[3].Uri.Should().Be("https://www.link.com/four");
         }
 		
 		[Fact]
@@ -36,14 +34,14 @@ namespace Crawler.Service.Tests
 		{
 			// arrange
 			var expectedUri = new Uri("https://www.link.com");
-			_mockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(string.Empty);
-			var linkService = new LinkService(_mockLinkClient.Object);
+			MockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(string.Empty);
+			var linkService = new LinkService(MockLinkClient.Object);
 
 			// act
 			var actual = await linkService.FindChildLinksAsync(expectedUri);
 
 			// assert
-			actual.Should().BeEmpty();
+			actual.VisitableLinks.Should().BeEmpty();
 		}
 
         [Theory]
@@ -54,14 +52,14 @@ namespace Crawler.Service.Tests
         {
             // arrange
             var expectedUri = new Uri("http://test");
-            _mockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(expectedContent);
-            var linkService = new LinkService(_mockLinkClient.Object);
+            MockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(expectedContent);
+            var linkService = new LinkService(MockLinkClient.Object);
 
             // act
             var actual = await linkService.FindChildLinksAsync(expectedUri);
 
             // assert
-            actual.Count.Should().Be(0);
+            actual.VisitableLinks.Count.Should().Be(0);
         }
 
         [Fact]
@@ -69,14 +67,14 @@ namespace Crawler.Service.Tests
         {
             // arrange
             var expectedUri = new Uri("http://test");
-            _mockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(TestWebPageWithNoLinks);
-            var linkService = new LinkService(_mockLinkClient.Object);
+            MockLinkClient.Setup(c => c.GetLinkContentAsync(It.Is<Uri>(u => u == expectedUri))).ReturnsAsync(TestWebPageWithNoLinks);
+            var linkService = new LinkService(MockLinkClient.Object);
 
             // act
             var actual = await linkService.FindChildLinksAsync(expectedUri);
 
             // assert
-            actual.Count.Should().Be(0);
+            actual.VisitableLinks.Count.Should().Be(0);
         }
     }
 }

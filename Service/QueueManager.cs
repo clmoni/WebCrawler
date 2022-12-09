@@ -4,10 +4,12 @@ using Service.Abstractions;
 
 namespace Service;
 
-// using out of the box thread safe BlockingCollection due to its
-// use of ConcurrentQueue.
-// class not unit tested because it just wrapping the language queue
-// with no extra functionality on top, not much value in testing out of the box code.
+/*
+ * using out of the box thread safe BlockingCollection due to its
+ * use of a ConcurrentQueue.
+ * class not unit tested because its just wrapping the out of the box queue
+ * with no extra logic on top, not much value in testing out of the box code.
+*/
 public class QueueManager: IQueueManager
 {
     private readonly BlockingCollection<Link> _linksQueue;

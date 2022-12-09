@@ -1,21 +1,30 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Models;
 using Service.Abstractions;
 
 namespace Service;
 
+/*
+ * not all methods here are tests as most of them are just wrapping
+ * the methods on the out of the box Dictionary. However, a lock (_linkRepositoryLock) has been*
+ * introduced to synchronise access to the Dictionary as it will be shared by multiple threads.
+ * This is to avoid race conditions. 
+ */
 public class LinkRepository: ILinkRepository
 {
-    private readonly Dictionary<string, List<string?>> _linkRepository;
-    private readonly object _visitedLinksLock;
+    private readonly Dictionary<string, List<string?>> _visitableLinks;
+    private readonly object _linkRepositoryLock;
     private const char ForwardSlash = '/';
     private readonly ILogger<LinkRepository> _logger;
+    private int _totalLinksFound;
 
-    public LinkRepository(Dictionary<string, List<string?>> linkRepository, ILoggerFactory loggerFactory)
+    public LinkRepository(Dictionary<string, List<string?>> visitableLinks, ILoggerFactory loggerFactory)
     {
-        _linkRepository = linkRepository;
-        _visitedLinksLock = new object();
+        _visitableLinks = visitableLinks;
+        _linkRepositoryLock = new object();
         _logger = loggerFactory.CreateLogger<LinkRepository>();
+        _totalLinksFound = 0;
     }
 
     private readonly Func<Uri, string> _convertUriToReliableKey = 
@@ -26,45 +35,61 @@ public class LinkRepository: ILinkRepository
     
     public void AddVisited(Uri uri)
     {
-        lock (_visitedLinksLock)
+        lock (_linkRepositoryLock)
         {
             var key = _convertUriToReliableKey(uri);
-            _linkRepository.TryAdd(key, new List<string?>());
+            if (!_visitableLinks.TryAdd(key, new List<string?>()))
+            {
+                _logger.LogDebug("Uri {Uri} is already added as key", uri.ToString());
+            }
         }
     }
     
     public void AddChildOfVisited(Uri parentUri, Uri childUri)
     {
-        lock (_visitedLinksLock)
+        lock (_linkRepositoryLock)
         {
             var key = _convertUriToReliableKey(parentUri);
             var childUriStr = _convertUriToValueEntry(childUri);
-            if (_linkRepository.ContainsKey(key))
+            
+            if (_visitableLinks.ContainsKey(key))
             {
-                _linkRepository[key].Add(childUriStr);
+                _visitableLinks[key].Add(childUriStr);
+            }
+            else
+            {
+                _logger.LogDebug("Parent {ParentUri} not found, skipping", parentUri.ToString());
             }
         }
     }
 
     public bool IsAlreadyVisited(Uri uri)
     {
-        lock (_visitedLinksLock)
+        lock (_linkRepositoryLock)
         {
             var key = _convertUriToReliableKey(uri);
-            return _linkRepository.ContainsKey(key);
+            return _visitableLinks.ContainsKey(key);
         }
     }
 
-    public void PrintAll()
+    public void IncrementTotalFound(int linkCount)
     {
-        lock (_visitedLinksLock)
+        lock (_linkRepositoryLock)
         {
-            var results = JsonSerializer.Serialize(_linkRepository, new JsonSerializerOptions
+            _totalLinksFound += linkCount;
+        }
+    }
+
+    public CrawlResult GetResult()
+    {
+        lock (_linkRepositoryLock)
+        {
+            var results = JsonSerializer.Serialize(_visitableLinks, new JsonSerializerOptions
             {
                 WriteIndented = true
             });
-            
-            _logger.LogInformation(@"Results: {Results} \n\n Visited: {Count} page(s)", results, _linkRepository.Count);
+            var discardedLinks = _totalLinksFound - _visitableLinks.Count;
+            return new CrawlResult(results, _visitableLinks.Count, discardedLinks);
         }
     }
 }

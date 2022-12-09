@@ -14,10 +14,12 @@ public class LinkClient : ILinkClient
         _logger = loggerFactory.CreateLogger<LinkClient>();
     }
     
-    // add polly for retrying here.
-    // for now I've made this method return 
-    // an empty string when failure occurs.
-    // to be handled by caller.
+    /*
+     * add polly for retrying here.
+     * for now I've made this method return
+     * an empty string when failure occurs.
+     * to be handled by caller.
+     */
     public async Task<string> GetLinkContentAsync(Uri uri)
     {
         try
@@ -36,7 +38,7 @@ public class LinkClient : ILinkClient
         }
         catch (Exception ex)
         {
-            _logger.LogInformation("{Uri} failed with {message}", uri.AbsolutePath, ex.Message);
+            _logger.LogDebug("{Uri} failed with {Message}", uri.AbsolutePath, ex.Message);
             return string.Empty;
         }
     }

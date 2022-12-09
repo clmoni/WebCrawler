@@ -1,16 +1,15 @@
 using Microsoft.Extensions.Logging;
 using Service;
 
-namespace Crawler.Service.Tests;
+namespace Crawler.Service.Tests.UnitTests;
 
-public class LinkRepositoryTests
+public class LinkRepositoryTests: TestBase
 {
-    private readonly Mock<ILoggerFactory> _mockLogger;
     public LinkRepositoryTests()
     {
         var logger = new Mock<ILogger<LinkRepository>>();
-        _mockLogger = new Mock<ILoggerFactory>();
-        _mockLogger.Setup(lc => lc.CreateLogger(It.IsAny<string>())).Returns(() => logger.Object);
+        MockLoggerFactory = new Mock<ILoggerFactory>();
+        MockLoggerFactory.Setup(lc => lc.CreateLogger(It.IsAny<string>())).Returns(() => logger.Object);
     }
     
     [Fact]
@@ -18,7 +17,7 @@ public class LinkRepositoryTests
     {
         // arrange
         var linksDictionary= new Dictionary<string, List<string?>>();
-        var linkRepository = new LinkRepository(linksDictionary, _mockLogger.Object);
+        var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         
         // act
@@ -34,7 +33,7 @@ public class LinkRepositoryTests
     {
         // arrange
         var linksDictionary= new Dictionary<string, List<string?>>();
-        var linkRepository = new LinkRepository(linksDictionary, _mockLogger.Object);
+        var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         linkRepository.AddVisited(new Uri(expectedVisitedLink));
 
@@ -51,7 +50,7 @@ public class LinkRepositoryTests
     {
         // arrange
         var linksDictionary= new Dictionary<string, List<string?>>();
-        var linkRepository = new LinkRepository(linksDictionary, _mockLogger.Object);
+        var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         const string expectedChildLink = "http://test.com/child";
         linkRepository.AddVisited(new Uri(expectedVisitedLink));

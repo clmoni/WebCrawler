@@ -2,17 +2,14 @@
 using Microsoft.Extensions.Logging;
 using Service;
 
-namespace Crawler.Service.Tests;
+namespace Crawler.Service.Tests.UnitTests;
 public class LinkClientTests : TestBase
 {
-    private readonly Mock<ILoggerFactory> _mockLogger;
-
     public LinkClientTests()
     {
-
         var logger = new Mock<ILogger<LinkClient>>();
-        _mockLogger = new Mock<ILoggerFactory>();
-        _mockLogger.Setup(lc => lc.CreateLogger(It.IsAny<string>())).Returns(() => logger.Object);
+        MockLoggerFactory = new Mock<ILoggerFactory>();
+        MockLoggerFactory.Setup(lc => lc.CreateLogger(It.IsAny<string>())).Returns(() => logger.Object);
     }
 
     [Fact]
@@ -21,7 +18,7 @@ public class LinkClientTests : TestBase
         // arrange
         const string expectedContent = "test content";
         var httpClient = CreateFakeHttpClient(expectedContent);
-        var linkClient = new LinkClient(httpClient, _mockLogger.Object);
+        var linkClient = new LinkClient(httpClient, MockLoggerFactory.Object);
         var uri = new Uri("https://monzo.com");
 
         // act
@@ -39,7 +36,7 @@ public class LinkClientTests : TestBase
         // arrange
         var expectedContent = string.Empty;
         var httpClient = CreateFakeHttpClient(expectedContent, expectedStatusCode);
-        var linkClient = new LinkClient(httpClient, _mockLogger.Object);
+        var linkClient = new LinkClient(httpClient, MockLoggerFactory.Object);
         var uri = new Uri("https://monzo.com");
 
         // act
@@ -61,7 +58,7 @@ public class LinkClientTests : TestBase
         // arrange
         const string expectedContent = "test irrelevant content";
         var httpClient = CreateFakeHttpClient(expectedContent, HttpStatusCode.OK, expectedContentType);
-        var linkClient = new LinkClient(httpClient, _mockLogger.Object);
+        var linkClient = new LinkClient(httpClient, MockLoggerFactory.Object);
         var uri = new Uri("https://monzo.com");
 
         // act

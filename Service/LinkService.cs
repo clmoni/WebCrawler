@@ -20,7 +20,7 @@ namespace Service
             _linkClient = linkClient;
         }
 
-        public async Task<IReadOnlyList<Link>> FindChildLinksAsync(Uri uri)
+        public async Task<PageResult> FindChildLinksAsync(Uri uri)
         {
             var pageContent = await _linkClient.GetLinkContentAsync(uri);
 
@@ -30,7 +30,7 @@ namespace Service
 
             var linkAttributesWithinHost = Sanitise(linkAttributes, uri);
 
-            return CreateLinks(linkAttributesWithinHost, uri);
+            return new PageResult(linkAttributes.Count, CreateLinks(linkAttributesWithinHost, uri));
         }
 
         private static HtmlNodeCollection GetAllLinkInPage(string pageContent)

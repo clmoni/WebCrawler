@@ -1,6 +1,6 @@
 ﻿using Models;
 
-namespace Crawler.Service.Tests
+namespace Crawler.Service.Tests.UnitTests
 {
 	public class LinkTests
 	{

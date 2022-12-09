@@ -1,13 +1,30 @@
 ﻿using Moq.Protected;
 using System.Net;
 using System.Net.Http.Headers;
+using Microsoft.Extensions.Logging;
+using Models;
+using Service.Abstractions;
 
 namespace Crawler.Service.Tests
 {
-    public class TestBase
+    public abstract class TestBase
     {
         private Mock<HttpMessageHandler>? _handlerMock;
+        protected Mock<IQueueManager> MockQueueManager;
+        protected Mock<ILinkService> MockLinkService;
+        protected Mock<ILinkRepository> MockLinkRepository;
+        protected Mock<ILoggerFactory> MockLoggerFactory;
+        protected Mock<ILinkClient> MockLinkClient;
 
+        protected TestBase()
+        {
+            MockQueueManager = new Mock<IQueueManager>();
+            MockLinkService = new Mock<ILinkService>();
+            MockLinkRepository = new Mock<ILinkRepository>();
+            MockLoggerFactory = new Mock<ILoggerFactory>();
+            MockLinkClient = new Mock<ILinkClient>();
+        }
+        
         protected static string TestWebPageWithLinks =>
             @"<!DOCTYPE html>
             <html>
@@ -36,7 +53,7 @@ namespace Crawler.Service.Tests
             <body></body>
             </html>";
 
-        public HttpClient CreateFakeHttpClient(string expectedContent, HttpStatusCode statusCode = HttpStatusCode.OK, string responseContentType = "text/html")
+        protected HttpClient CreateFakeHttpClient(string expectedContent, HttpStatusCode statusCode = HttpStatusCode.OK, string responseContentType = "text/html")
         {
             var response = new HttpResponseMessage
             {
@@ -57,9 +74,91 @@ namespace Crawler.Service.Tests
                 .ReturnsAsync(response)
                 .Verifiable();
 
-            return new(_handlerMock.Object);
+            return new HttpClient(_handlerMock.Object);
         }
 
+        protected void MockSuccessCalls(string expectedParent, string expectedChild)
+        {
+            var expectedChildLink = new Link(expectedChild, expectedParent);
+            MockLinkService.SetupSequence(ls => ls.FindChildLinksAsync(It.IsAny<Uri>()))
+                .ReturnsAsync(new PageResult (1,new[]{ expectedChildLink }))
+                .ReturnsAsync(new PageResult(0, new List<Link>()));
+
+            MockLinkRepository.Setup(lr => lr.IsAlreadyVisited(
+                    It.Is<Uri>(u => u.Equals(new Uri(expectedParent)))))
+                .Returns(false);
+
+            MockQueueManager.SetupSequence(qm => qm.Dequeue(out expectedChildLink))
+                .Returns(true)
+                .Returns(false);
+        }
+        
+        protected void VerifyCrawl(string expectedParent, string expectedChild)
+        {
+            var expectedChildLink = new Link(expectedChild, expectedParent);
+
+            MockLinkService.Verify(ms => ms.FindChildLinksAsync(It.IsAny<Uri>()), Times.Exactly(2));
+
+            MockLinkRepository.Verify(lr => lr.AddVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedParent)))), Times.Once);
+
+            MockLinkRepository.Verify(lr => lr.AddChildOfVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedParent))),
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Once);
+
+            MockLinkRepository.Verify(lr => lr.IsAlreadyVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Once);
+
+            MockQueueManager.Verify(qm => qm.Enqueue(
+                It.Is<Link>(l => l.Uri != null && l.Uri.Equals(expectedChildLink.Uri))), Times.Once);
+
+            MockQueueManager.Verify(qm => qm.Dequeue(out expectedChildLink), Times.Exactly(2));
+
+            MockLinkRepository.Verify(lr => lr.AddVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Once);
+        }
+        
+        protected void MockAlreadyVisitedCalls(string expectedParent, string expectedChild)
+        {
+            var expectedChildLink = new Link(expectedChild, expectedParent);
+            MockLinkService.Setup(ls => ls.FindChildLinksAsync(It.IsAny<Uri>()))
+                .ReturnsAsync( new PageResult(1, new[] {expectedChildLink}) );
+            
+            MockLinkRepository.SetupSequence(lr => lr.IsAlreadyVisited(
+                    It.IsAny<Uri>()))
+                .Returns(false)
+                .Returns(true);
+
+            MockQueueManager.SetupSequence(qm => qm.Dequeue(out expectedChildLink))
+                .Returns(true)
+                .Returns(true)
+                .Returns(false);
+        }
+        
+        protected void VerifyAlreadyVisitedCrawl(string expectedParent, string expectedChild)
+        {
+            var expectedChildLink = new Link(expectedChild, expectedParent);
+
+            MockLinkService.Verify(ms => ms.FindChildLinksAsync(It.IsAny<Uri>()), Times.Exactly(3));
+
+            MockLinkRepository.Verify(lr => lr.AddVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedParent)))), Times.Once);
+            
+            MockLinkRepository.Verify(lr => lr.AddChildOfVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedParent))),
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Exactly(3));
+            
+            MockLinkRepository.Verify(lr => lr.IsAlreadyVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Exactly(3));
+            
+            MockQueueManager.Verify(qm => qm.Enqueue(
+                It.Is<Link>(l => l.Uri != null && l.Uri.Equals(expectedChildLink.Uri))), Times.Exactly(2));
+            
+            MockQueueManager.Verify(qm => qm.Dequeue(out expectedChildLink), Times.Exactly(3));
+            
+            MockLinkRepository.Verify(lr => lr.AddVisited(
+                It.Is<Uri>(u => u.Equals(new Uri(expectedChild)))), Times.Exactly(2));
+        }
     }
 }
 

@@ -11,6 +11,7 @@ namespace Crawler;
 public static class StartUp
 {
     private const string DefaultStartingUri = "https://monzo.com/";
+    
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         var startingUri =  GetStartingUri(args);
@@ -26,7 +27,7 @@ public static class StartUp
                             p.GetRequiredService<ILoggerFactory>()
                         ))
                     .AddScoped<ILinkService, LinkService>()
-                    .AddScoped<ICrawlerEngine, CrawlerEngine>(p =>
+                    .AddScoped<IEngine, CrawlerEngine>(p =>
                         new CrawlerEngine(
                             p.GetRequiredService<IQueueManager>(),
                             p.GetRequiredService<ILinkService>(),
