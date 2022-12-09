@@ -22,8 +22,9 @@ public abstract class EngineBase: IEngine
         Logger = logger.CreateLogger<IEngine>();
     }
     
-    protected async Task EnqueueTopLevelLinks(IEnumerable<Link> topLevelLinks)
+    protected async Task EnqueueTopLevelLinks(IReadOnlyList<Link> topLevelLinks)
     {
+        var count = topLevelLinks.Count;
         foreach (var link in topLevelLinks)
         {
             if (!link.IsCrawlableLink(TopLevelUri)) continue;

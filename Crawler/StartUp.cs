@@ -10,7 +10,15 @@ namespace Crawler;
 
 public static class StartUp
 {
-    private const string DefaultStartingUri = "https://monzo.com/";
+    private const string DefaultStartingUri = "https://fast.com/";
+    private const int DefaultDictionaryCapacity = 5000;
+    /*
+     * Dictionary this[key], Add(key, value), Remove(key) & Contains(key) are all constant time [O(1)].
+     * This is because the underlying implementation is a HashMap.
+     * However, the worst case scenario for Add(key, value) is O(n) where the dictionary needs to be
+     * resized due to the capacity being too small. For large websites we can specify this capacity from
+     * the console args. The ContainsValue(value) method is O(n) but we are not searching for values here.
+     */
     
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
@@ -23,7 +31,7 @@ public static class StartUp
                         new QueueManager(new BlockingCollection<Link>(new ConcurrentQueue<Link>())))
                     .AddSingleton<ILinkRepository, LinkRepository>(p =>
                         new LinkRepository(
-                            new Dictionary<string, List<string?>>(),
+                            new Dictionary<string, IList<string?>>(DefaultDictionaryCapacity),
                             p.GetRequiredService<ILoggerFactory>()
                         ))
                     .AddScoped<ILinkService, LinkService>()
@@ -35,7 +43,7 @@ public static class StartUp
                             p.GetRequiredService<ILoggerFactory>(),
                             startingUri
                         ))
-                    .AddHttpClient<ILinkClient, LinkClient>();
+                    .AddHttpClient<ILinkClient, LinkClient>(c => c.Timeout = TimeSpan.FromMilliseconds(2000));
             });
     }
 

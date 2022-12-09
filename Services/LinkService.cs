@@ -29,8 +29,8 @@ namespace Services
             var linkAttributes = linkNodes.Where(n => n.Attributes.Contains(HrefTagName)).Select(n => n.Attributes[HrefTagName]).ToList();
 
             var linkAttributesWithinHost = Sanitise(linkAttributes, uri);
-
-            return new PageResult(linkAttributes.Count, CreateLinks(linkAttributesWithinHost, uri));
+            var links = CreateLinks(linkAttributesWithinHost, uri);
+            return new PageResult(linkAttributes.Count, links);
         }
 
         private static HtmlNodeCollection GetAllLinkInPage(string pageContent)
@@ -56,12 +56,16 @@ namespace Services
 
         private static IReadOnlyList<Link> CreateLinks(IEnumerable<HtmlAttribute> linkAttributes, Uri parentUri)
         {
-            return linkAttributes
+            var links = linkAttributes
                 .Select(l =>
                     new Link(l.Value.Trim().Trim(NewLine), parentUri.ToString()))
                 .DistinctBy(l => l.RawChildLink)
                 .DistinctBy(l => l.Uri?.ToString())
                 .ToList();
+
+            links.RemoveAll(l => l.Uri is null);
+
+            return links;
         }
 
         private static bool IsDisallowedExtension(string link)

@@ -6,7 +6,7 @@ namespace Crawler;
 
 public static class Program
 {
-    private static readonly Stopwatch _timer = new();
+    private static readonly Stopwatch Timer = new();
     
     private static async Task Main(string[] args)
     {
@@ -14,16 +14,16 @@ public static class Program
         var token = source.Token;
         var host = StartUp.CreateHostBuilder(args).Build();
         
-        _timer.Start();
+        Timer.Start();
         await host.Services.GetRequiredService<IEngine>().Crawl(token);
-        _timer.Stop();
+        Timer.Stop();
         
         var crawlResult = host.Services.GetRequiredService<ILinkRepository>().GetResult();
         
         Console.WriteLine("Results: {0}", crawlResult.Pages);
         Console.WriteLine("{0} page(s) found:", crawlResult.PageCount);
         Console.WriteLine("{0} link(s) discarded:", crawlResult.LinksDiscarded );
-        Console.WriteLine("Time Elapsed: {0}", _timer.Elapsed.ToString());
+        Console.WriteLine("Time Elapsed: {0}", Timer.Elapsed.ToString());
     }
 }
 

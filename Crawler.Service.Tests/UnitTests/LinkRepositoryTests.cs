@@ -16,7 +16,7 @@ public class LinkRepositoryTests: TestBase
     public void AddVisited_WhenGivenLink_AddsVisitedLinkAsKeyAndInitialisesChildContainer()
     {
         // arrange
-        var linksDictionary= new Dictionary<string, List<string?>>();
+        var linksDictionary= new Dictionary<string, IList<string?>>();
         var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         
@@ -32,7 +32,7 @@ public class LinkRepositoryTests: TestBase
     public void AddVisited_WhenGivenLinkAlreadyVisit_ShouldNotAddAgain()
     {
         // arrange
-        var linksDictionary= new Dictionary<string, List<string?>>();
+        var linksDictionary= new Dictionary<string, IList<string?>>();
         var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         linkRepository.AddVisited(new Uri(expectedVisitedLink));
@@ -49,7 +49,7 @@ public class LinkRepositoryTests: TestBase
     public void AddVisitedChild_WhenGivenChildLink_ShouldAddToParent()
     {
         // arrange
-        var linksDictionary= new Dictionary<string, List<string?>>();
+        var linksDictionary= new Dictionary<string, IList<string?>>();
         var linkRepository = new LinkRepository(linksDictionary, MockLoggerFactory.Object);
         const string expectedVisitedLink = "http://test.com";
         const string expectedChildLink = "http://test.com/child";
