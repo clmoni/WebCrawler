@@ -9,7 +9,7 @@ public abstract class EngineBase: IEngine
     protected readonly ILinkRepository LinkRepository;
     protected readonly IQueueManager QueueManager;
     protected readonly ILinkService LinkService;
-    protected readonly ILogger<IEngine> Logger;
+    private readonly ILogger<EngineBase> _logger;
 
     protected readonly Uri TopLevelUri;
 
@@ -19,7 +19,7 @@ public abstract class EngineBase: IEngine
         LinkService = linkService;
         LinkRepository = linkRepository;
         TopLevelUri = topLevelUri;
-        Logger = logger.CreateLogger<IEngine>();
+        _logger = logger.CreateLogger<EngineBase>();
     }
     
     protected async Task EnqueueTopLevelLinks(IReadOnlyList<Link> topLevelLinks)
@@ -49,7 +49,7 @@ public abstract class EngineBase: IEngine
         var pageResult = await LinkService.FindChildLinksAsync(link.Uri);
         var childLinks = pageResult.VisitableLinks;
         LinkRepository.IncrementTotalFound(pageResult.TotalLinksFound);
-        Logger.LogInformation("Found {childLinks} child pages in {uri}", childLinks.Count, link.Uri);
+        _logger.LogInformation("Found {childLinks} child pages in {uri}", childLinks.Count, link.Uri);
 
         foreach (var childLink in childLinks)
         {

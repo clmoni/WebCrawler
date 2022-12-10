@@ -5,6 +5,8 @@ namespace Services;
 
 public class CrawlerEngine: EngineBase
 {
+    private readonly ILogger<CrawlerEngine> _logger;
+
     public CrawlerEngine(
         IQueueManager queueManager,
         ILinkService linkService,
@@ -12,19 +14,21 @@ public class CrawlerEngine: EngineBase
         ILoggerFactory loggerFactory,
         Uri topLevelUri) :
         base(queueManager, linkService, linkRepository, loggerFactory, topLevelUri)
-    { }
+    {
+        _logger = loggerFactory.CreateLogger<CrawlerEngine>();
+    }
 
     public override async Task Crawl(CancellationToken cancellationToken)
     {
         // dispose queue upon completion of crawling
         using (QueueManager)
         {
-            Logger.LogInformation("Crawling has started");
+            _logger.LogInformation("Crawling has started");
             
             var pageResult = await LinkService.FindChildLinksAsync(TopLevelUri);
             var topLevelLinks = pageResult.VisitableLinks;
             LinkRepository.IncrementTotalFound(pageResult.TotalLinksFound);
-            Logger.LogInformation("Found {topLevelLinks} top level pages in {uri}", topLevelLinks.Count, TopLevelUri);
+            _logger.LogInformation("Found {topLevelLinks} top level pages in {uri}", topLevelLinks.Count, TopLevelUri);
             await EnqueueTopLevelLinks(topLevelLinks);
             
             // fire off an asynchronous task per child link found on first page.
@@ -35,7 +39,7 @@ public class CrawlerEngine: EngineBase
             // wait for all the above task to finish crawling
             await Task.WhenAll(tasks);
             
-            Logger.LogInformation("Crawling is complete");
+            _logger.LogInformation("Crawling is complete");
         }
     }
 }
