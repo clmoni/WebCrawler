@@ -2,6 +2,18 @@
 using Services.Abstractions;
 
 namespace Services;
+
+/*
+ * HttpClient is intended to be instantiated once & reused throughout the life of the application.
+ * Creating a new HttpClient instance per request ourselves will exhaust the available sockets result
+ * in a SocketException being thrown. This is important for an application such as this that can potentially
+ * fire off thousands of requests.
+ *
+ * hence this class does not dispose or instantiate the HttpClient & is registered at start up by using AddHttpClient().
+ * This basically ensures this class is short lived but every time a new one is needed,
+ * it gets a new HttpClient with a recycled HttpMessageHandler & connection from the HttpClientFactory managed by the framework.
+ * essentially, after every request the HttpMessageHandler is released & recycled (not disposed) by other HttpClients.
+ */
 public class LinkClient : ILinkClient
 {
     private readonly HttpClient _httpClient;

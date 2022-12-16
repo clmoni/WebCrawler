@@ -1,5 +1,12 @@
 ﻿namespace Models;
 
+/*
+ * This is sort of like a value object because it is immutable.
+ * once initialised you can be ask questions about its internal state.
+ * Validation happens in the constructor. Ideally if not a valid link, it should be thrown out
+ * but I didnt want to break the flow in the service class & opted for a null filter so the crawl is
+ * continuous. Null Links should be logged & inspected later.
+ */
 public class Link
 {
     private const char ForwardSlash = '/';
@@ -63,6 +70,11 @@ public class Link
         return ParentLink.Host == Uri?.Host;
     }
     
+    // strings are immutable in c# so everytime you try to mutate one a new one is allocated on the heap.
+    // this can be heavy on the GC & which will in turn pause the app to try to remove them once they're 
+    // out of scope depending on their age in GC which will in turn impact performance. Here I am trying not 
+    // to do unnecessary direct mutation of strings but could be improved with a Span type which allocates string
+    // reference addresses on the stack as well as offsets instead.
     private static Uri? NormaliseChildLink(string childLink, string parentLink)
     {
         if (NonVisitableLinkTypes.Any(childLink.ToLower().StartsWith) ||
@@ -80,6 +92,18 @@ public class Link
         
         var parentUri = new Uri(parentLink);
         var sections = new List<string>();
+        
+        /*
+         each split stored on the heap
+        var l = childLink.AsSpan();
+        foreach (var s in l)
+        {
+            if (s == ForwardSlash)
+            {
+                sections.Add(l.Slice(l.IndexOf(s) + 1));
+            }
+        }
+        */
         
         sections.AddRange(childLink.Split(ForwardSlash));
 

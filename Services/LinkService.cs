@@ -4,6 +4,9 @@ using Services.Abstractions;
 
 namespace Services
 {
+    // this class is using HtmlAgilityPack to parse the HTML, I'm not entirely sure how efficiently it is
+    // at dealing with string, something to look into & potentially improve but it is a very popular
+    // C# library for doing this.
 	public class LinkService: ILinkService
 	{
         private readonly ILinkClient _linkClient;

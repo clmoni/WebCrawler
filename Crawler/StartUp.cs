@@ -17,7 +17,7 @@ public static class StartUp
      * This is because the underlying implementation is a HashMap.
      * However, the worst case scenario for Add(key, value) is O(n) where the dictionary needs to be
      * resized due to the capacity being too small. For large websites we can specify this capacity from
-     * the console args. The ContainsValue(value) method is O(n) but we are not searching for values here.
+     * the console args. The ContainsValue(value) method is O(n) - linear time but we are not searching for values here.
      */
     
     public static IHostBuilder CreateHostBuilder(string[] args)

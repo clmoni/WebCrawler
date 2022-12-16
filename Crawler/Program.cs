@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Abstractions;
+using static System.Console;
 
 namespace Crawler;
 
@@ -9,7 +10,9 @@ public static class Program
     private static readonly Stopwatch Timer = new();
     
     private static async Task Main(string[] args)
-    {
+    { 
+        WriteLine($"MAIN: thread ID {Environment.CurrentManagedThreadId}");
+
         var source = new CancellationTokenSource();
         var token = source.Token;
         var host = StartUp.CreateHostBuilder(args).Build();
@@ -20,10 +23,10 @@ public static class Program
         
         var crawlResult = host.Services.GetRequiredService<ILinkRepository>().GetResult();
         
-        Console.WriteLine("Results: {0}", crawlResult.Pages);
-        Console.WriteLine("{0} page(s) found:", crawlResult.PageCount);
-        Console.WriteLine("{0} link(s) discarded:", crawlResult.LinksDiscarded );
-        Console.WriteLine("Time Elapsed: {0}", Timer.Elapsed.ToString());
+        WriteLine("Results: {0}", crawlResult.Pages);
+        WriteLine("{0} page(s) found:", crawlResult.PageCount);
+        WriteLine("{0} link(s) discarded:", crawlResult.LinksDiscarded );
+        WriteLine("Time Elapsed: {0}", Timer.Elapsed.ToString());
     }
 }
 

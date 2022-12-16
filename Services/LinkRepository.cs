@@ -9,7 +9,10 @@ namespace Services;
  * not all methods here are tests as most of them are just wrapping
  * the methods on the out of the box Dictionary. However, a lock (_linkRepositoryLock) has been*
  * introduced to synchronise access to the Dictionary as it will be shared by multiple threads.
- * This is to avoid race conditions. 
+ * This is to avoid race conditions.
+ *
+ * Could use a ConcurrentDictionary type which is thread safe here but since I've already used
+ * a thread safe type for the Queue I wanted to demonstrate the use of locks.
  */
 public class LinkRepository: ILinkRepository
 {
