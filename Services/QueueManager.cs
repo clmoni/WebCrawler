@@ -13,12 +13,13 @@ namespace Services;
 public class QueueManager: IQueueManager
 {
     private readonly BlockingCollection<Link> _linksQueue;
-    private const int WaitTimeInMilliseconds = 1000;
     private bool _disposed;
-
-    public QueueManager(BlockingCollection<Link> linksQueue)
+    private readonly int _waitTimeInMilliseconds;
+    
+    public QueueManager(BlockingCollection<Link> linksQueue, int waitTimeInMilliseconds)
     {
         _linksQueue = linksQueue;
+        _waitTimeInMilliseconds = waitTimeInMilliseconds;
     }
 
     public void Enqueue(Link link)
@@ -28,7 +29,7 @@ public class QueueManager: IQueueManager
 
     public bool Dequeue(out Link? link)
     {
-        var timeout = TimeSpan.FromMilliseconds(WaitTimeInMilliseconds);
+        var timeout = TimeSpan.FromMilliseconds(_waitTimeInMilliseconds);
         return _linksQueue.TryTake(out link, timeout);
     }
 

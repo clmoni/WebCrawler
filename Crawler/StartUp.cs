@@ -13,6 +13,8 @@ public static class StartUp
     private const string DefaultStartingUri = "https://fast.com/";
     private const int DefaultDictionaryCapacity = 5000;
     private const int DefaultHttpTimeout = 2000;
+    private const int QueueWaitTimeMilliseconds = 1000;
+
     /*
      * Dictionary this[key], Add(key, value), Remove(key) & Contains(key) are all constant time [O(1)].
      * This is because the underlying implementation is a HashMap.
@@ -25,17 +27,16 @@ public static class StartUp
     {
         var startingUri =  GetStartingUri(args);
         var httpTimeout = TimeSpan.FromMilliseconds(DefaultHttpTimeout);
-
+        var queue = new BlockingCollection<Link>(new ConcurrentQueue<Link>());
+        var queueManager = new QueueManager(queue, QueueWaitTimeMilliseconds);
+        var repositoryList = new Dictionary<string, IList<string?>>(DefaultDictionaryCapacity);
+        
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
-                services.AddSingleton<IQueueManager, QueueManager>(_ =>
-                        new QueueManager(new BlockingCollection<Link>(new ConcurrentQueue<Link>())))
+                services.AddSingleton<IQueueManager, QueueManager>(_ => queueManager)
                     .AddSingleton<ILinkRepository, LinkRepository>(p =>
-                        new LinkRepository(
-                            new Dictionary<string, IList<string?>>(DefaultDictionaryCapacity),
-                            p.GetRequiredService<ILoggerFactory>()
-                        ))
+                        new LinkRepository(repositoryList, p.GetRequiredService<ILoggerFactory>()))
                     .AddScoped<ILinkService, LinkService>()
                     .AddScoped<IEngine, CrawlerEngine>(p =>
                         new CrawlerEngine(
