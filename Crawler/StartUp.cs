@@ -12,6 +12,7 @@ public static class StartUp
 {
     private const string DefaultStartingUri = "https://fast.com/";
     private const int DefaultDictionaryCapacity = 5000;
+    private const int DefaultHttpTimeout = 2000;
     /*
      * Dictionary this[key], Add(key, value), Remove(key) & Contains(key) are all constant time [O(1)].
      * This is because the underlying implementation is a HashMap.
@@ -23,6 +24,7 @@ public static class StartUp
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         var startingUri =  GetStartingUri(args);
+        var httpTimeout = TimeSpan.FromMilliseconds(DefaultHttpTimeout);
 
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
@@ -43,7 +45,7 @@ public static class StartUp
                             p.GetRequiredService<ILoggerFactory>(),
                             startingUri
                         ))
-                    .AddHttpClient<ILinkClient, LinkClient>(c => c.Timeout = TimeSpan.FromMilliseconds(2000));
+                    .AddHttpClient<ILinkClient, LinkClient>(c => c.Timeout = httpTimeout);
             });
     }
 
